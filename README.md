@@ -7,13 +7,15 @@ previous version).
 
 ## Options
 
-	-e, --edit		open text editor with list of repositories,
-	-f, --force		force regeneration of ~/.ssh/authorized_keys
-	-g, --list-git		print list of git clone commands and exit
-	-h, --help, --usage	display this help message and exit
-	-l, --list		print list of git repositories and exit
-	-q, --quiet		use git clone --quiet
-	--version		display version and exit
+    -e, --edit              open text editor with list of repositories,
+    -f, --force             force regeneration of ~/.ssh/authorized_keys
+    -g, --list-git          print list of git clone commands and exit
+    -h, --help, --usage     display this help message and exit
+    -l, --list              print list of git repositories and exit
+    -q, --quiet             use git clone --quiet
+    -t, --test              check if list of repositories exists, if not then
+                            exit without raising error
+    --version               display version and exit
 
 When run without options, update-authorized-keys looks for changes in
 `~/.ssh/authorized_keys` or `~/.ssh/git_authorized_keys` and recreates the former
@@ -21,7 +23,7 @@ if necessary.
 
 ## Key list format:
 
-	<git repository> <dir/filename> [branch]
+    <git repository> <dir/filename> [branch]
 
   - git repository: any URI accepted by `git clone`
   - dir/filename: path to file with ssh public keys relative to repository
