@@ -33,10 +33,12 @@ key_list="${HOME}/.ssh/git_authorized_keys"
 authorized_keys="${HOME}/.ssh/authorized_keys"
 authorized_keys_checksum="${key_list}.checksum"
 
+scriptname="`basename ${0}`"
+
 # Quick check if we don't have any arguments
 if [ $# -eq 0 ]; then
 	# Exit if there is no key list
-	[ ! -f "${key_list}" ] && echo "${0}: error: no key list '${key_list}'" && exit 1
+	[ ! -f "${key_list}" ] && echo "${scriptname}: error: no key list '${key_list}'" && exit 1
 
 	# Exit if we don't have any changes in $key_list or $authorized_keys
 	[ -f "${authorized_keys_checksum}" ] && sha1sum --strict --quiet --status --check ${authorized_keys_checksum} && exit 0
@@ -48,7 +50,7 @@ if [ $# -gt 0 ]; then
 	for option in "$@"; do
 		case "${option}" in
 			-h|--help|--usage)
-				echo "${0}: generate ~/.ssh/authorized_keys using git
+				echo "${scriptname}: generate ~/.ssh/authorized_keys using git
 
 This Script reads a formatted list of git repositories from
 ~/.ssh/git_authorized_keys, clones them to a temporary directory
@@ -64,7 +66,7 @@ Options:
   -q, --quiet		use git clone --quiet
   --version		display version and exit
 
-When run without options, ${0} looks for changes in
+When run without options, ${scriptname} looks for changes in
 ~/.ssh/authorized_keys or ~/.ssh/git_authorized_keys and recreates the former
 if necessary.
 
@@ -78,7 +80,7 @@ Key list format:
 - branch: optional branch/tag to checkout, default: master
 Empty lines and lines beginning with '#' are ignored.
 
-To use as different user: sudo -H -u <username> ${0}" && exit 0
+To use as different user: sudo -H -u <username> ${scriptname}" && exit 0
 				;;
 			-e|--edit)
 				editor ${key_list}
@@ -108,11 +110,11 @@ To use as different user: sudo -H -u <username> ${0}" && exit 0
 				git_quiet="--quiet"
 				;;
 			--version)
-				echo "${0} v0.1" && exit 0
+				echo "${scriptname} v0.1" && exit 0
 				;;
 			*)
-				echo "${0}: unrecognized option '${option}'
-Try \`${0} --help\` for more information." && exit 2
+				echo "${scriptname}: unrecognized option '${option}'
+Try \`${scriptname} --help\` for more information." && exit 2
 				;;
 		esac
 	done
