@@ -64,6 +64,8 @@ Options:
   -h, --help, --usage	display this help message and exit
   -l, --list		print list of git repositories and exit
   -q, --quiet		use git clone --quiet
+  -t, --test		check if list of repositories exists, if not then
+			exit without raising error
   --version		display version and exit
 
 When run without options, ${scriptname} looks for changes in
@@ -108,6 +110,9 @@ To use as different user: sudo -H -u <username> ${scriptname}" && exit 0
 				;;
 			-q|--quiet)
 				git_quiet="--quiet"
+				;;
+			-t|--test)
+				[ ! -f "${key_list}" ] && exit 0
 				;;
 			--version)
 				echo "${scriptname} v0.1" && exit 0
