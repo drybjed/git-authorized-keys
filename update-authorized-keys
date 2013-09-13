@@ -72,7 +72,7 @@ Options:
   -g, --list-git	print list of git clone commands and exit
   -h, --help, --usage	display this help message and exit
   -l, --list		print list of git repositories and exit
-  -q, --quiet		use git clone --quiet
+  -q, --quiet		be quiet, ignore errors
   -t, --test		check if list of repositories exists, if not then
 			exit without raising error
   --version		display version and exit
@@ -157,12 +157,31 @@ while read repository file branch; do
 	# Ignore comments and empty lines
 	[[ "$repository" =~ (^\s*#|^\s*$) ]] && continue
 
+	# Ignore non-existent repositories with --quiet option
+	if [ ! -z "$q" ] ; then
+		git ls-remote --exit-code ${repository} &> /dev/null || continue
+	fi
+
+	# Check if file to include was specified
+	if [ -z "${file}" ] ; then
+
+		# and gnore if it wasn't
+		[ ! -z "$q" ] && continue
+
+		echo "${scriptname}: error: no file specified for ${repository} repository" && exit 1
+	fi
+
 	# Script works so fast we need nanosecond accuracy
 	local_repository="`basename ${repository}`-`date +%s.%N`"
 	local_file="${local_repository}/${file}"
 	local_branch="${branch:-master}"
 
 	git clone ${git_quiet} --branch ${local_branch} ${repository} ${local_repository}
+
+	# Ignore non-existent files with --quiet option
+	if [ ! -z "$q" ] ; then
+		[ ! -e ${local_file} ] && continue
+	fi
 
 	cat <<EOF >> ${temp_authorized_keys}
 # Source: ${repository} ${file} (${local_branch})
