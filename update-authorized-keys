@@ -179,7 +179,7 @@ while read repository file branch; do
 	# Check if file to include was specified
 	if [ -z "${file}" ] ; then
 
-		# and gnore if it wasn't
+		# and ignore if it wasn't
 		[ ! -z "$q" ] && continue
 
 		echo "${scriptname}: error: no file specified for ${repository} repository" && exit 1
