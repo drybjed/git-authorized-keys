@@ -35,22 +35,31 @@ authorized_keys_checksum="${key_list}.checksum"
 
 scriptname="`basename ${0}`"
 
-# Quick check if we don't have any arguments
-if [ $# -eq 0 ]; then
-	# Exit if there is no key list
-	[ ! -f "${key_list}" ] && echo "${scriptname}: error: no key list '${key_list}'" && exit 1
+options=`getopt -n ${0} -o "-efghlqtv" -l "edit,force,list-git,help,usage,list,quiet,test,version" -- "$@"`
 
-	# Exit if we don't have any changes in $key_list or $authorized_keys
-	[ -f "${authorized_keys_checksum}" ] && sha1sum --strict --quiet --status --check ${authorized_keys_checksum} && exit 0
-fi
+eval set -- "$options"
 
-git_quiet=""
+declare e f g h l q t git_quiet
 
-if [ $# -gt 0 ]; then
-	for option in "$@"; do
-		case "${option}" in
-			-h|--help|--usage)
-				echo "${scriptname}: generate ~/.ssh/authorized_keys using git
+while [ $# -gt 0 ] ; do
+	case "$1" in
+		-e|--edit)		e=1 ; shift ;;
+		-f|--force)		f=1 ; shift ;;
+		-g|--list-git)		g=1 ; shift ;;
+		-h|--help|--usage)	h=1 ; shift ;;
+		-l|--list)		l=1 ; shift ;;
+		-q|--quiet)		q=1 ; shift ;;
+		-t|--test)		t=1 ; shift ;;
+		-v|--version)		v=1 ; shift ;;
+		--) shift ;;
+	esac
+done
+
+# -- Version
+[ ! -z "$v" ] && echo "${scriptname} v0.1" && exit 0
+
+# -- Help/Usage
+[ ! -z "$h" ] && echo "${scriptname}: generate ~/.ssh/authorized_keys using git
 
 This Script reads a formatted list of git repositories from
 ~/.ssh/git_authorized_keys, clones them to a temporary directory
@@ -83,47 +92,46 @@ Key list format:
 Empty lines and lines beginning with '#' are ignored.
 
 To use as different user: sudo -H -u <username> ${scriptname}" && exit 0
-				;;
-			-e|--edit)
-				editor ${key_list}
-				# Exit if we don't have any changes in $key_list or $authorized_keys
-				[ -f "${authorized_keys_checksum}" ] && sha1sum --strict --quiet --status --check ${authorized_keys_checksum} && exit 0
-				;;
-			-f|--force)
-				;;
-			-l|--list)
-				while read repository file branch; do
-					[[ "$repository" =~ (^\s*#|^\s*$) ]] && continue
-					local_branch="${branch:-master}"
-					echo "${repository} ${file} (${local_branch})"
-				done < ${key_list}
-				exit 0
-				;;
-			-g|--list-git)
-				while read repository file branch; do
-					[[ "$repository" =~ (^\s*#|^\s*$) ]] && continue
-					local_repository="`basename ${repository}`-`date +%s.%N`"
-					local_branch="${branch:-master}"
-					echo "git clone ${git_quiet} --branch ${local_branch} ${repository} ${local_repository}"
-				done < ${key_list}
-				exit 0
-				;;
-			-q|--quiet)
-				git_quiet="--quiet"
-				;;
-			-t|--test)
-				[ ! -f "${key_list}" ] && exit 0
-				;;
-			--version)
-				echo "${scriptname} v0.1" && exit 0
-				;;
-			*)
-				echo "${scriptname}: unrecognized option '${option}'
-Try \`${scriptname} --help\` for more information." && exit 2
-				;;
-		esac
-	done
+
+# -- Check if key list exists, exit quietly if it doesn't
+[ ! -z "$t" ] && [ ! -f "${key_list}" ] && exit 0
+
+# -- Make git behave quietly
+[ ! -z "$q" ] && git_quiet="--quiet"
+
+# -- Open editor with key list before doing anything
+if [ ! -z "$e" ] ; then
+	editor ${key_list}
+	# Exit if we don't have any changes in $key_list or $authorized_keys
+	[ -f "${authorized_keys_checksum}" ] && sha1sum --strict --quiet --status --check ${authorized_keys_checksum} && exit 0
 fi
+
+# Exit if there is no key list
+[ ! -f "${key_list}" ] && echo "${scriptname}: error: no key list '${key_list}'" && exit 1
+
+# -- Display key list and exit
+if [ ! -z "$l" ] ; then
+	while read repository file branch; do
+		[[ "$repository" =~ (^\s*#|^\s*$) ]] && continue
+		local_branch="${branch:-master}"
+		echo "${repository} ${file} (${local_branch})"
+	done < ${key_list}
+	exit 0
+fi
+
+# Print list of git commands and exit
+if [ ! -z "$g" ] ; then
+	while read repository file branch; do
+		[[ "$repository" =~ (^\s*#|^\s*$) ]] && continue
+		local_repository="`basename ${repository}`-`date +%s.%N`"
+		local_branch="${branch:-master}"
+		echo "git clone ${git_quiet} --branch ${local_branch} ${repository} ${local_repository}"
+	done < ${key_list}
+	exit 0
+fi
+
+# Exit if we don't have any changes in $key_list or $authorized_keys and we don't use the Force
+[ -z "$f" ] && [ -f "${authorized_keys_checksum}" ] && sha1sum --strict --quiet --status --check ${authorized_keys_checksum} && exit 0
 
 # Setup temporary environment
 TEMPDIR=`mktemp -d`
