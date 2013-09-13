@@ -133,6 +133,9 @@ fi
 # Exit if we don't have any changes in $key_list or $authorized_keys and we don't use the Force
 [ -z "$f" ] && [ -f "${authorized_keys_checksum}" ] && sha1sum --strict --quiet --status --check ${authorized_keys_checksum} && exit 0
 
+# Remove old checksum file, we are recreating ~/.ssh/authorized_keys
+rm -rf ${authorized_keys_checksum}
+
 # Setup temporary environment
 TEMPDIR=`mktemp -d`
 trap "rm -rf ${TEMPDIR}" EXIT
@@ -200,6 +203,5 @@ fi
 mv ${temp_authorized_keys} ${authorized_keys}
 
 # Make a checksum of $key_list and $authorized_keys
-rm -rf ${authorized_keys_checksum}
 sha1sum ${key_list} ${authorized_keys} > ${authorized_keys_checksum}
 
