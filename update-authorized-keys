@@ -35,14 +35,15 @@ authorized_keys_checksum="${key_list}.checksum"
 
 scriptname="`basename ${0}`"
 
-options=`getopt -n ${0} -o "-efghlqtv" -l "edit,force,list-git,help,usage,list,quiet,test,version" -- "$@"`
+options=`getopt -n ${0} -o "-cefghlqtv" -l "checksum,edit,force,list-git,help,usage,list,quiet,test,version" -- "$@"`
 
 eval set -- "$options"
 
-declare e f g h l q t git_quiet
+declare c e f g h l q t git_quiet
 
 while [ $# -gt 0 ] ; do
 	case "$1" in
+		-c|--checksum)		c=1 ; shift ;;
 		-e|--edit)		e=1 ; shift ;;
 		-f|--force)		f=1 ; shift ;;
 		-g|--list-git)		g=1 ; shift ;;
@@ -67,6 +68,7 @@ and copies contents of the specified file into ~/.ssh/authorized_keys (with back
 copy of previous version).
 
 Options:
+  -c, --checksum        check file checksums, return the result, exit
   -e, --edit		open text editor with list of repositories,
   -f, --force		force regeneration of ~/.ssh/authorized_keys
   -g, --list-git	print list of git clone commands and exit
@@ -98,6 +100,15 @@ To use as different user: sudo -H -u <username> ${scriptname}" && exit 0
 
 # -- Make git behave quietly
 [ ! -z "$q" ] && git_quiet="--quiet"
+
+# -- Check the checksum, return the result and exit
+if [ ! -z "$c" ] ; then
+	if [ ! -z "$q" ] ; then
+		sha1sum --strict --quiet --status --check ${authorized_keys_checksum} &> /dev/null ; exit $?
+	else
+		sha1sum --strict --quiet --status --check ${authorized_keys_checksum} ; exit $?
+	fi
+fi
 
 # -- Open editor with key list before doing anything
 if [ ! -z "$e" ] ; then
