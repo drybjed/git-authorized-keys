@@ -56,7 +56,7 @@ while [ $# -gt 0 ] ; do
 done
 
 # -- Version
-[ ! -z "$v" ] && echo "${scriptname} v0.1" && exit 0
+[ ! -z "$v" ] && echo "${scriptname} v0.2" && exit 0
 
 # -- Help/Usage
 [ ! -z "$h" ] && echo "${scriptname}: generate ~/.ssh/authorized_keys using git
