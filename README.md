@@ -12,7 +12,7 @@ previous version).
     -g, --list-git          print list of git clone commands and exit
     -h, --help, --usage     display this help message and exit
     -l, --list              print list of git repositories and exit
-    -q, --quiet             use git clone --quiet
+    -q, --quiet             be quiet, ignore errors
     -t, --test              check if list of repositories exists, if not then
                             exit without raising error
     --version               display version and exit
