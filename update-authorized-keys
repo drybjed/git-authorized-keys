@@ -39,7 +39,7 @@ options=`getopt -n ${0} -o "-cefghlqtv" -l "checksum,edit,force,list-git,help,us
 
 eval set -- "$options"
 
-declare c e f g h l q t git_quiet
+declare c e f g h l q t v git_quiet error_warning
 
 while [ $# -gt 0 ] ; do
 	case "$1" in
@@ -100,6 +100,9 @@ To use as different user: sudo -H -u <username> ${scriptname}" && exit 0
 
 # -- Make git behave quietly
 [ ! -z "$q" ] && git_quiet="--quiet"
+
+# Make error messages just a warning if we use the Force
+[ ! -z "$f" ] && error_warning="warning" || error_warning="error"
 
 # -- Check the checksum, return the result and exit
 if [ ! -z "$c" ] ; then
@@ -172,8 +175,21 @@ while read repository file branch; do
 	[[ "$repository" =~ (^\s*#|^\s*$) ]] && continue
 
 	# Ignore non-existent repositories with --quiet option
-	if [ ! -z "$q" ] ; then
-		git ls-remote --exit-code ${repository} &> /dev/null || continue
+	if [ ! -z "$q" -o ! -z "$f" ] ; then
+
+		set +e
+		git ls-remote --exit-code ${repository} &> /dev/null
+		git_rc=$?
+		set -e
+
+		if [ ${git_rc} -ne 0 ] ; then
+			if [ ! -z "$q" ] ; then
+				continue
+			else
+				echo "${scriptname}: ${error_warning}: repository ${repository} does not exist"
+				continue
+			fi
+		fi
 	fi
 
 	# Check if file to include was specified
@@ -182,7 +198,11 @@ while read repository file branch; do
 		# and ignore if it wasn't
 		[ ! -z "$q" ] && continue
 
-		echo "${scriptname}: error: no file specified for ${repository} repository" && exit 1
+		echo "${scriptname}: ${error_warning}: no file specified for ${repository} repository"
+		if [ ! -z "$f" ] ; then
+			continue
+		fi
+		exit 1
 	fi
 
 	# Script works so fast we need nanosecond accuracy
@@ -192,9 +212,14 @@ while read repository file branch; do
 
 	git clone ${git_quiet} --branch ${local_branch} ${repository} ${local_repository}
 
-	# Ignore non-existent files with --quiet option
-	if [ ! -z "$q" ] ; then
-		[ ! -e ${local_file} ] && continue
+	if [ ! -e ${local_file} ] ; then
+		[ ! -z "$q" ] && continue
+
+		echo "${scriptname}: ${error_warning}: file ${file} in repository ${repository} not found"
+		if [ ! -z "$f" ] ; then
+			continue
+		fi
+		exit 1
 	fi
 
 	cat <<EOF >> ${temp_authorized_keys}
