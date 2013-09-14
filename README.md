@@ -8,7 +8,7 @@ previous version).
 ## Options
 
     -c, --checksum          check file checksums, return the result, exit
-    -e, --edit              open text editor with list of repositories,
+    -e, --edit              open text editor with list of repositories
     -f, --force             force regeneration of ~/.ssh/authorized_keys
     -g, --list-git          print list of git clone commands and exit
     -h, --help, --usage     display this help message and exit
