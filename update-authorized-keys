@@ -106,10 +106,20 @@ To use as different user: sudo -H -u <username> ${scriptname}" && exit 0
 
 # -- Check the checksum, return the result and exit
 if [ ! -z "$c" ] ; then
+
+	set +e
+	sha1sum --strict --quiet --status --check ${authorized_keys_checksum} &> /dev/null
+	sha1sum_rc=$?
+	set -e
+
 	if [ ! -z "$q" ] ; then
-		sha1sum --strict --quiet --status --check ${authorized_keys_checksum} &> /dev/null ; exit $?
+		exit ${sha1sum_rc}
 	else
-		sha1sum --strict --quiet --status --check ${authorized_keys_checksum} ; exit $?
+		if [ ${sha1sum_rc} -eq 0 ] ; then
+			echo "Checksum OK" ; exit 0
+		else
+			echo "Checksum changed" ; exit 0
+		fi
 	fi
 fi
 
